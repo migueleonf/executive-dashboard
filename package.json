@@ -1,0 +1,9 @@
+{
+  "name": "executive-dashboard",
+  "version": "1.0.0",
+  "description": "Demand Gen Executive Dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
