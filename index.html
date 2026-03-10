@@ -1302,8 +1302,8 @@
         if(partnerSizeInst) { partnerSizeInst.destroy(); partnerSizeInst=null; }
       } else {
       document.getElementById('partnerSizeWoW').innerHTML = ['LE','SME','SB'].map(sz => {
-        const cur = pSz[latest][sz] || 0;
-        const prv = prev ? (pSz[prev][sz] || 0) : 0;
+        const cur = (pSz[latest]||{})[sz] || 0;
+        const prv = prev ? ((pSz[prev]||{})[sz] || 0) : 0;
         const wow = prv > 0 ? ((cur - prv) / prv * 100).toFixed(0) : null;
         const up  = wow !== null && Number(wow) >= 0;
         const wowHtml = wow === null ? '' :
@@ -1323,9 +1323,9 @@
       partnerSizeInst = new Chart(document.getElementById('partnerSizeChart'), {
         type:'bar',
         data:{ labels, datasets:[
-          { label:'LE',  data:weeks.map(w=>pSz[w].LE||0),  backgroundColor:'rgba(22,2,69,0.85)',    borderWidth:0, stack:'p' },
-          { label:'SME', data:weeks.map(w=>pSz[w].SME||0), backgroundColor:'rgba(96,88,255,0.82)',  borderWidth:0, stack:'p' },
-          { label:'SB',  data:weeks.map(w=>pSz[w].SB||0),  backgroundColor:'rgba(191,190,255,0.85)',borderWidth:0, borderRadius:2, stack:'p' },
+          { label:'LE',  data:weeks.map(w=>(pSz[w]||{}).LE||0),  backgroundColor:'rgba(22,2,69,0.85)',    borderWidth:0, stack:'p' },
+          { label:'SME', data:weeks.map(w=>(pSz[w]||{}).SME||0), backgroundColor:'rgba(96,88,255,0.82)',  borderWidth:0, stack:'p' },
+          { label:'SB',  data:weeks.map(w=>(pSz[w]||{}).SB||0),  backgroundColor:'rgba(191,190,255,0.85)',borderWidth:0, borderRadius:2, stack:'p' },
         ]},
         options:{ responsive:true, plugins:{legend:{display:false},tooltip:TOOLTIP}, scales:{x:xAxis(true),y:yAxis(true)} }
       });
