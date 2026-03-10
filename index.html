@@ -1513,8 +1513,12 @@
       const iMQLdate = idx('MQL Date'), iMQLval = idx('MQLs');
       const iSALdate = idx('SAL Date'), iSALval = idx('SALs');
       const iSQLdate = idx('SQL Date'), iSQLval = idx('SQLs');
-      const iBizCh   = idx('business_channel');  // col C
+      // col C — match case-insensitively, spaces or underscores
+      const iBizCh = headers.findIndex(h =>
+        h.toLowerCase().replace(/[\s\-]+/g,'_') === 'business_channel'
+      );
 
+      if(iBizCh < 0) console.warn('[Milestones] business_channel column not found. Headers:', headers);
       const Q1_START = '2026-01-01', Q1_END = '2026-03-31';
       const wkSet = new Set();
       const mqls={}, sals={}, sqls={};         // S&M only
