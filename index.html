@@ -1048,7 +1048,13 @@
     function renderSizeCharts(d) {
       const labels = d.weeks.map(fmtWk);
       const n = labels.length;
-      const src = (partnerOn && d.sizeAll) ? d.sizeAll : d.size;
+      // Compute combined size (S&M + Partner) from parts — works even when sizeAll is absent (SEED)
+      const computedSizeAll = {};
+      d.weeks.forEach(w => {
+        const s = d.size[w] || {}, p = (d.partnerSize || {})[w] || {};
+        computedSizeAll[w] = { LE:(s.LE||0)+(p.LE||0), SME:(s.SME||0)+(p.SME||0), SB:(s.SB||0)+(p.SB||0) };
+      });
+      const src = partnerOn ? computedSizeAll : d.size;
       const subLabel = partnerOn ? 'S&M + Partner' : 'Sales & Marketing only';
       ['sizeSBsub','sizeSMEsub','sizeLEsub'].forEach(id => {
         const el = document.getElementById(id);
@@ -1390,6 +1396,9 @@
         sqls: {'2026-01-04':34, '2026-01-11':28, '2026-01-18':21, '2026-01-25':20, '2026-02-01':33, '2026-02-08':42, '2026-02-15':150,'2026-02-22':58, '2026-03-01':41}
       }
     };
+
+    // SEED has no regionAll (no partner region data) — point to region so toggle doesn't break
+    SEED.regionAll = SEED.region;
 
     renderAll(SEED);
     // Apply initial partner state (OFF)
