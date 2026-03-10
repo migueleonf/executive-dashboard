@@ -597,7 +597,7 @@
           <span class="upload-icon">↑</span>
           <span id="uploadLabel">Drop CSV to update</span>
         </div>
-        <button id="partnerToggle" class="partner-toggle" style="display:none" title="Show/hide partner data">Partner <span id="partnerToggleState">ON</span></button>
+        <button id="partnerToggle" class="partner-toggle off" title="Show/hide partner data">Partner <span id="partnerToggleState">OFF</span></button>
         <input type="file" id="fileInput" accept=".csv" style="display:none">
       </div>
       <div id="uploadStatus" style="font-size:11px;color:var(--text-secondary);margin-top:4px;text-align:right;min-height:14px;letter-spacing:0.04em;"></div>
@@ -652,8 +652,8 @@
             <div class="legend-item">
               <div class="leg-dash" style="width:18px;height:2px;background:var(--lavender);border-top:2px dashed var(--lavender)"></div> S&amp;M Target
             </div>
-            <div class="legend-item">
-              <div class="leg-dash" style="width:18px;height:2px;background:var(--violet);border-top:2px dashed var(--violet)"></div> Combined Target
+            <div class="legend-item partner-only">
+              <div class="leg-dash" style="width:18px;height:2px;background:var(--violet);border-top:2px dashed var(--violet)"></div> S&amp;M+Partner Target
             </div>
           </div>
         </div>
@@ -667,7 +667,7 @@
         <!-- SB -->
         <div class="card">
           <div class="chart-header">
-            <div class="sec-label" style="margin-bottom:0">SB · Actuals vs Target</div>
+            <div><div class="sec-label" style="margin-bottom:2px">SB · Actuals vs Target</div><div id="sizeSBsub" style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Sales &amp; Marketing only</div></div>
             <div class="legend">
               <div class="legend-item"><div class="leg-dot" style="background:#BFBEFF"></div> Actuals</div>
               <div class="legend-item"><div class="leg-dash" style="width:18px;height:2px;border-top:2px dashed #2D2D82"></div> S&amp;M Target</div>
@@ -679,7 +679,7 @@
         <!-- SME -->
         <div class="card">
           <div class="chart-header">
-            <div class="sec-label" style="margin-bottom:0">SME · Actuals vs Target</div>
+            <div><div class="sec-label" style="margin-bottom:2px">SME · Actuals vs Target</div><div id="sizeSMEsub" style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Sales &amp; Marketing only</div></div>
             <div class="legend">
               <div class="legend-item"><div class="leg-dot" style="background:#6058FF"></div> Actuals</div>
               <div class="legend-item"><div class="leg-dash" style="width:18px;height:2px;border-top:2px dashed #2D2D82"></div> S&amp;M Target</div>
@@ -691,7 +691,7 @@
         <!-- LE -->
         <div class="card">
           <div class="chart-header">
-            <div class="sec-label" style="margin-bottom:0">LE · Actuals vs Target</div>
+            <div><div class="sec-label" style="margin-bottom:2px">LE · Actuals vs Target</div><div id="sizeLEsub" style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Sales &amp; Marketing only</div></div>
             <div class="legend">
               <div class="legend-item"><div class="leg-dot" style="background:#160245"></div> Actuals</div>
               <div class="legend-item"><div class="leg-dash" style="width:18px;height:2px;border-top:2px dashed #2D2D82"></div> S&amp;M Target</div>
@@ -721,7 +721,10 @@
 
         <div class="card">
           <div class="chart-header">
-            <div class="sec-label" style="margin-bottom:0">QTD Volume by Stage</div>
+            <div>
+              <div class="sec-label" style="margin-bottom:2px">QTD Volume by Stage</div>
+              <div style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Uncohorted milestones</div>
+            </div>
             <div class="legend">
               <div class="legend-item"><div class="leg-dot" style="background:rgba(96,88,255,0.9);border-radius:1px"></div> MQLs</div>
               <div class="legend-item"><div class="leg-dot" style="background:rgba(45,45,130,0.9);border-radius:1px"></div> SALs</div>
@@ -819,6 +822,38 @@
     </div>
   </div>
 
+  <!-- ── Partner Section ─────────────────────────── -->
+  <div class="partner-only" style="margin-top:22px;">
+    <div class="sec-label" style="margin-bottom:14px">Partner Pipeline · Q1 2026</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+      <!-- Partner by Size -->
+      <div class="card">
+        <div class="chart-header" style="margin-bottom:12px;">
+          <div>
+            <div class="sec-label" style="margin-bottom:2px">By Customer Size · Partner</div>
+            <div style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Partner attributed only · WoW</div>
+          </div>
+        </div>
+        <div id="partnerSizeWoW" style="display:flex;gap:20px;margin-bottom:14px;flex-wrap:wrap;"></div>
+        <canvas id="partnerSizeChart" height="90"></canvas>
+      </div>
+
+      <!-- Deal Registration -->
+      <div class="card">
+        <div class="chart-header" style="margin-bottom:12px;">
+          <div>
+            <div class="sec-label" style="margin-bottom:2px">Partner Pipeline · Total &amp; Deal Registration</div>
+            <div style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Weekly pipeline · WoW</div>
+          </div>
+        </div>
+        <div id="dealRegWoW" style="display:flex;gap:20px;margin-bottom:14px;flex-wrap:wrap;"></div>
+        <canvas id="dealRegChart" height="90"></canvas>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ── Footer ───────────────────────────────────── -->
   <footer class="footer">
     <span>Demand Generation · Executive Dashboard · Phase 1</span>
@@ -840,7 +875,7 @@
     const MULTIP   = 12;   // MRR → ACV
     const Q1_START = '2026-01-01';
 
-    let partnerOn = true;
+    let partnerOn = false;
 
     // ── Helpers ───────────────────────────────────────────────────
     const fmtD   = (v) => v >= 1e6 ? `$${(v/1e6).toFixed(2)}M` : v >= 1000 ? `$${(v/1000).toFixed(1)}K` : `$${Math.round(v)}`;
@@ -868,13 +903,33 @@
         callback:(v)=> v>=1e6 ? `$${(v/1e6).toFixed(1)}M` : `$${v/1000}K` } });
 
     // ── Chart instances ───────────────────────────────────────────
-    let trendInst=null, sizeInstSB=null, sizeInstSME=null, sizeInstLE=null, regionInst=null, funnelInst=null;
+    let trendInst=null, sizeInstSB=null, sizeInstSME=null, sizeInstLE=null, regionInst=null, funnelInst=null, partnerSizeInst=null, dealRegInst=null;
 
     // ── Y-axis for count data (not dollars) ──────────────────────
     const yAxisCount = () => ({
       grid: { display: false }, border: { display: false },
       ticks: { font: { family: 'Inter', size: 12 }, color: '#9090b8',
         callback: v => v % 1 === 0 ? v : null }
+    });
+
+    // ── Plugin: inline end-labels on dashed target lines ─────────
+    Chart.register({
+      id: 'targetEndLabels',
+      afterDraw(chart) {
+        const ctx = chart.ctx;
+        chart.data.datasets.forEach((ds, i) => {
+          if (!ds._endLabel) return;
+          const meta = chart.getDatasetMeta(i);
+          if (!meta.data.length) return;
+          const pt = meta.data[meta.data.length - 1];
+          ctx.save();
+          ctx.font = '500 10px Inter, sans-serif';
+          ctx.fillStyle = ds.borderColor;
+          ctx.textAlign = 'right';
+          ctx.fillText(ds._endLabel, pt.x, pt.y - 6);
+          ctx.restore();
+        });
+      }
     });
 
     // ── Render: KPIs + panels ─────────────────────────────────────
@@ -949,14 +1004,15 @@
     // ── Render: Gap strip ─────────────────────────────────────────
     function renderGapStrip(d) {
       const strip = document.getElementById('gapStrip');
+      const tgt = partnerOn ? TARGETS.total : TARGETS.sm;
       strip.innerHTML = d.weeks.map(w => {
-        const sm  = d.sm[w]||0;
-        const gap = TARGETS.sm - sm;
+        const val = partnerOn ? (d.total[w]||0) : (d.sm[w]||0);
+        const gap = tgt - val;
         const hit = gap <= 0;
         const lbl = fmtWk(w);
-        const val = hit ? '✓' : `–${fmtD(gap)}`;
+        const disp = hit ? '✓' : `–${fmtD(gap)}`;
         return `<div class="gap-cell ${hit?'hit':'miss'}">
-          <span class="gap-lbl">${lbl}</span>${val}</div>`;
+          <span class="gap-lbl">${lbl}</span>${disp}</div>`;
       }).join('');
     }
 
@@ -968,18 +1024,21 @@
       const n = d.weeks.length;
       renderGapStrip(d);
       if(trendInst) trendInst.destroy();
+      const datasets = [
+        { label:'S&M', data:smData,
+          backgroundColor:'rgba(96,88,255,0.82)', borderWidth:0, borderRadius:2, order:2 },
+        { label:'S&M Target', data:Array(n).fill(TARGETS.sm),
+          type:'line', borderColor:'#BFBEFF', borderDash:[6,4], borderWidth:2, pointRadius:0, backgroundColor:'transparent', order:0, _endLabel:'S&M $1.312M' },
+      ];
+      if(partnerOn) {
+        datasets.unshift({ label:'S&M + Partner', data:totData,
+          backgroundColor:'rgba(45,45,130,0.25)', borderWidth:0, borderRadius:2, order:3 });
+        datasets.push({ label:'Combined Target', data:Array(n).fill(TARGETS.total),
+          type:'line', borderColor:'#2D2D82', borderDash:[6,4], borderWidth:2, pointRadius:0, backgroundColor:'transparent', order:0, _endLabel:'S&M+Partner $2.115M' });
+      }
       trendInst=new Chart(document.getElementById('trendChart'),{
         type:'bar',
-        data:{ labels, datasets:[
-          { label:'S&M + Partner', data:totData,
-            backgroundColor:'rgba(45,45,130,0.25)', borderWidth:0, borderRadius:2, order:3 },
-          { label:'S&M', data:smData,
-            backgroundColor:'rgba(96,88,255,0.82)', borderWidth:0, borderRadius:2, order:2 },
-          { label:'S&M Target $1.312M', data:Array(n).fill(TARGETS.sm),
-            type:'line', borderColor:'#BFBEFF', borderDash:[6,4], borderWidth:2, pointRadius:0, backgroundColor:'transparent', order:0 },
-          { label:'Combined Target $2.115M', data:Array(n).fill(TARGETS.total),
-            type:'line', borderColor:'#2D2D82', borderDash:[6,4], borderWidth:2, pointRadius:0, backgroundColor:'transparent', order:0 },
-        ]},
+        data:{ labels, datasets },
         options:{ responsive:true, plugins:{ legend:{display:false}, tooltip:TOOLTIP },
           scales:{ x:xAxis(), y:yAxis() } }
       });
@@ -989,12 +1048,18 @@
     function renderSizeCharts(d) {
       const labels = d.weeks.map(fmtWk);
       const n = labels.length;
+      const src = (partnerOn && d.sizeAll) ? d.sizeAll : d.size;
+      const subLabel = partnerOn ? 'S&M + Partner' : 'Sales & Marketing only';
+      ['sizeSBsub','sizeSMEsub','sizeLEsub'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.textContent = subLabel;
+      });
       function makeSize(canvasId, key, color, target, prev) {
         if(prev) prev.destroy();
         return new Chart(document.getElementById(canvasId), {
           type:'bar',
           data:{ labels, datasets:[
-            { label:key+' Actuals', data:d.weeks.map(w=>(d.size[w]||{})[key]||0),
+            { label:key+' Actuals', data:d.weeks.map(w=>(src[w]||{})[key]||0),
               backgroundColor:color, borderWidth:0, borderRadius:2, order:1 },
             { label:'S&M Target', data:Array(n).fill(target),
               type:'line', borderColor:'#2D2D82', borderDash:[6,4], borderWidth:2,
@@ -1106,50 +1171,54 @@
 
     // ── Render: Executive Insights ────────────────────────────────
     function renderInsights(d, m) {
-      const weeks   = d.weeks;
-      const latest  = weeks[weeks.length - 1];
-      const prev    = weeks[weeks.length - 2];
-      const smNow   = d.sm[latest] || 0;
-      const smPrev  = d.sm[prev]   || 0;
-      const wow     = prev && smPrev > 0 ? ((smNow - smPrev) / smPrev * 100) : null;
+      const weeks = d.weeks;
+      const latest = weeks[weeks.length - 1];
+      const prev   = weeks[weeks.length - 2];
+
+      // Partner-aware values
+      const nowVal  = partnerOn ? (d.total[latest]||0) : (d.sm[latest]||0);
+      const prevVal = partnerOn ? (d.total[prev]  ||0) : (d.sm[prev]  ||0);
+      const tgtWk   = partnerOn ? TARGETS.total : TARGETS.sm;
+      const tgtLbl  = partnerOn ? '$2.115M' : '$1.312M';
+      const wow = prev && prevVal > 0 ? ((nowVal - prevVal) / prevVal * 100) : null;
 
       // QTD pace & Q1 projection
-      const qtdSM       = weeks.reduce((s, w) => s + (d.sm[w] || 0), 0);
+      const qtdVal       = weeks.reduce((s,w) => s + (partnerOn ? (d.total[w]||0) : (d.sm[w]||0)), 0);
       const wksCompleted = weeks.length;
       const wksRemaining = Q_WEEKS - wksCompleted;
-      const avgPace     = qtdSM / wksCompleted;
-      const projected   = qtdSM + avgPace * wksRemaining;
-      const q1Target    = TARGETS.sm * Q_WEEKS;
+      const avgPace      = qtdVal / wksCompleted;
+      const projected    = qtdVal + avgPace * wksRemaining;
+      const q1Target     = tgtWk * Q_WEEKS;
 
-      // Size gaps vs weekly target (S&M only)
-      const sizeMap = { LE: TARGETS.sizeLE, SME: TARGETS.sizeSME, SB: TARGETS.sizeSB };
+      // Size gaps (partner-aware)
+      const sizeMap  = { LE: TARGETS.sizeLE, SME: TARGETS.sizeSME, SB: TARGETS.sizeSB };
+      const sizeSrc  = (partnerOn && d.sizeAll) ? d.sizeAll : d.size;
       let worstSize = null, worstRatio = Infinity;
       Object.entries(sizeMap).forEach(([k, t]) => {
-        const ratio = ((d.size[latest] || {})[k] || 0) / t;
-        if (ratio < worstRatio) { worstRatio = ratio; worstSize = k; }
+        const ratio = ((sizeSrc[latest]||{})[k]||0) / t;
+        if(ratio < worstRatio) { worstRatio = ratio; worstSize = k; }
       });
 
       // Milestone conversion (MQL → SAL latest week)
-      const mLatest   = m && m.weeks.length ? m.weeks[m.weeks.length - 1] : null;
-      const mqlsNow   = mLatest ? (m.mqls[mLatest] || 0) : 0;
-      const salsNow   = mLatest ? (m.sals[mLatest] || 0) : 0;
+      const mLatest    = m && m.weeks.length ? m.weeks[m.weeks.length - 1] : null;
+      const mqlsNow    = mLatest ? (m.mqls[mLatest]||0) : 0;
+      const salsNow    = mLatest ? (m.sals[mLatest]||0) : 0;
       const salConvPct = mqlsNow > 0 ? (salsNow / mqlsNow * 100) : null;
 
       const G = 'var(--green)', Y = '#9a6c00', R = 'var(--red)';
-
       const insights = [];
 
       // 1 — Status
-      const statusPct  = (smNow / TARGETS.sm * 100).toFixed(0);
-      const statusColor = smNow >= TARGETS.sm ? G : smNow >= TARGETS.sm * 0.8 ? Y : R;
+      const statusPct   = (nowVal / tgtWk * 100).toFixed(0);
+      const statusColor = nowVal >= tgtWk ? G : nowVal >= tgtWk * 0.8 ? Y : R;
       insights.push({ color: statusColor, category: 'Status',
-        text: smNow >= TARGETS.sm
-          ? `This week at ${statusPct}% of target — ${fmtD(smNow)} generated vs $1.312M goal.`
-          : `This week at ${statusPct}% of target — ${fmtD(TARGETS.sm - smNow)} below the $1.312M weekly goal.`
+        text: nowVal >= tgtWk
+          ? `This week at ${statusPct}% of target — ${fmtD(nowVal)} generated vs ${tgtLbl} goal.`
+          : `This week at ${statusPct}% of target — ${fmtD(tgtWk - nowVal)} below the ${tgtLbl} weekly goal.`
       });
 
       // 2 — Momentum
-      if (wow !== null) {
+      if(wow !== null) {
         const momColor = wow >= 0 ? G : wow >= -20 ? Y : R;
         insights.push({ color: momColor, category: 'Momentum',
           text: wow >= 0
@@ -1159,22 +1228,22 @@
       }
 
       // 3 — Outlook
-      const gapToQ1    = q1Target - projected;
+      const gapToQ1      = q1Target - projected;
       const outlookColor = projected >= q1Target ? G : projected >= q1Target * 0.85 ? Y : R;
       insights.push({ color: outlookColor, category: 'Q1 Outlook',
         text: projected >= q1Target
           ? `At current pace, Q1 tracks to ${fmtD(projected)} — on course to meet the quarter goal.`
-          : `At current pace, Q1 projects ${fmtD(projected)} — ${fmtD(gapToQ1)} gap with ${wksRemaining} weeks left. Needs ${fmtD(gapToQ1 / Math.max(wksRemaining, 1))}/wk acceleration.`
+          : `At current pace, Q1 projects ${fmtD(projected)} — ${fmtD(gapToQ1)} gap with ${wksRemaining} weeks left. Needs ${fmtD(gapToQ1 / Math.max(wksRemaining,1))}/wk acceleration.`
       });
 
       // 4 — Focus
       const focusColor = worstRatio >= 0.8 ? Y : R;
       insights.push({ color: focusColor, category: 'Where to Focus',
-        text: `${worstSize} is the weakest segment at ${(worstRatio * 100).toFixed(0)}% of its weekly target — prioritize pipeline acceleration here.`
+        text: `${worstSize} is the weakest segment at ${(worstRatio*100).toFixed(0)}% of its weekly target — prioritize pipeline acceleration here.`
       });
 
       // 5 — Pipeline health (MQL→SAL)
-      if (salConvPct !== null) {
+      if(salConvPct !== null) {
         const convColor = salConvPct >= 25 ? G : salConvPct >= 15 ? Y : R;
         insights.push({ color: convColor, category: 'Pipeline Health',
           text: salConvPct >= 20
@@ -1200,8 +1269,93 @@
       renderFunnelChart(d.milestones);
     }
 
+    // ── Render: Partner Section ───────────────────────────────────
+    function renderPartnerSection(d) {
+      const weeks  = d.weeks;
+      const labels = weeks.map(fmtWk);
+      const latest = weeks[weeks.length - 1];
+      const prev   = weeks[weeks.length - 2];
+
+      // ── Partner by size: directly from partnerSize ───────────────
+      const pSz = d.partnerSize || {};
+
+      // WoW inline stats for partner size
+      const szColors = { LE:'rgba(22,2,69,0.85)', SME:'rgba(96,88,255,0.82)', SB:'rgba(191,190,255,0.85)' };
+      const hasPartnerSizeData = weeks.some(w => ['LE','SME','SB'].some(sz => (pSz[w]||{})[sz] > 0));
+      if(!hasPartnerSizeData) {
+        document.getElementById('partnerSizeWoW').innerHTML =
+          `<div style="font-size:12px;color:var(--text-secondary);font-style:italic;">Upload pipeline CSV to see partner size breakdown</div>`;
+        if(partnerSizeInst) { partnerSizeInst.destroy(); partnerSizeInst=null; }
+      } else {
+      document.getElementById('partnerSizeWoW').innerHTML = ['LE','SME','SB'].map(sz => {
+        const cur = pSz[latest][sz] || 0;
+        const prv = prev ? (pSz[prev][sz] || 0) : 0;
+        const wow = prv > 0 ? ((cur - prv) / prv * 100).toFixed(0) : null;
+        const up  = wow !== null && Number(wow) >= 0;
+        const wowHtml = wow === null ? '' :
+          `<span style="font-size:11px;font-weight:500;color:${up?'var(--green)':'var(--red)'}">${up?'▲':'▼'} ${Math.abs(wow)}% WoW</span>`;
+        return `<div style="display:flex;flex-direction:column;gap:2px;min-width:64px;">
+          <div style="display:flex;align-items:center;gap:5px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:${szColors[sz]};flex-shrink:0"></div>
+            <span style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">${sz}</span>
+          </div>
+          <span style="font-size:22px;font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--indigo);line-height:1">${fmtD(cur)}</span>
+          ${wowHtml}
+        </div>`;
+      }).join('');
+
+      // Partner by size chart
+      if(partnerSizeInst) partnerSizeInst.destroy();
+      partnerSizeInst = new Chart(document.getElementById('partnerSizeChart'), {
+        type:'bar',
+        data:{ labels, datasets:[
+          { label:'LE',  data:weeks.map(w=>pSz[w].LE||0),  backgroundColor:'rgba(22,2,69,0.85)',    borderWidth:0, stack:'p' },
+          { label:'SME', data:weeks.map(w=>pSz[w].SME||0), backgroundColor:'rgba(96,88,255,0.82)',  borderWidth:0, stack:'p' },
+          { label:'SB',  data:weeks.map(w=>pSz[w].SB||0),  backgroundColor:'rgba(191,190,255,0.85)',borderWidth:0, borderRadius:2, stack:'p' },
+        ]},
+        options:{ responsive:true, plugins:{legend:{display:false},tooltip:TOOLTIP}, scales:{x:xAxis(true),y:yAxis(true)} }
+      });
+      } // end if hasPartnerSizeData
+
+      // ── Total Partner Pipeline + Deal Registration breakdown ──────
+      const partnerTotal = weeks.map(w => Math.max(0, (d.total[w]||0) - (d.sm[w]||0)));
+      const dealReg      = weeks.map(w => (d.partnerChannels ? (d.partnerChannels[w]||{})['Deal Registration'] || 0 : (d.channels[w]||{})['Deal Registration'] || 0));
+      const ptLatest = partnerTotal[partnerTotal.length - 1] || 0;
+      const ptPrev   = partnerTotal[partnerTotal.length - 2] || 0;
+      const ptWow    = ptPrev > 0 ? ((ptLatest - ptPrev) / ptPrev * 100).toFixed(0) : null;
+      const ptUp     = ptWow !== null && Number(ptWow) >= 0;
+      const drLatest = dealReg[dealReg.length - 1] || 0;
+      const drPrev   = dealReg[dealReg.length - 2] || 0;
+      const drWow    = drPrev > 0 ? ((drLatest - drPrev) / drPrev * 100).toFixed(0) : null;
+      const drUp     = drWow !== null && Number(drWow) >= 0;
+
+      document.getElementById('dealRegWoW').innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:2px;margin-right:24px;">
+          <span style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">Total Partner</span>
+          <span style="font-size:30px;font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--indigo);line-height:1">${fmtD(ptLatest)}</span>
+          ${ptWow === null ? '' : `<span style="font-size:11px;font-weight:500;color:${ptUp?'var(--green)':'var(--red)'}">${ptUp?'▲':'▼'} ${Math.abs(ptWow)}% WoW</span>`}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">Deal Registration</span>
+          <span style="font-size:30px;font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--indigo);line-height:1">${fmtD(drLatest)}</span>
+          ${drWow === null ? '' : `<span style="font-size:11px;font-weight:500;color:${drUp?'var(--green)':'var(--red)'}">${drUp?'▲':'▼'} ${Math.abs(drWow)}% WoW</span>`}
+        </div>`;
+
+      if(dealRegInst) dealRegInst.destroy();
+      dealRegInst = new Chart(document.getElementById('dealRegChart'), {
+        type:'bar',
+        data:{ labels, datasets:[
+          { label:'Total Partner', data:partnerTotal,
+            backgroundColor:'rgba(45,45,130,0.25)', borderWidth:0, borderRadius:2, order:2 },
+          { label:'Deal Registration', data:dealReg,
+            backgroundColor:'rgba(96,88,255,0.82)', borderWidth:0, borderRadius:2, order:1 },
+        ]},
+        options:{ responsive:true, plugins:{legend:{display:false},tooltip:TOOLTIP}, scales:{x:xAxis(),y:yAxis()} }
+      });
+    }
+
     function renderAll(d) {
-      renderKPIs(d); renderTable(d); renderTrend(d); renderSizeCharts(d); renderRegion(d); renderFunnel(d); renderInsights(d, d.milestones);
+      renderKPIs(d); renderTable(d); renderTrend(d); renderSizeCharts(d); renderRegion(d); renderFunnel(d); renderInsights(d, d.milestones); renderPartnerSection(d);
     }
 
     // ── Default seed data (last known) ────────────────────────────
@@ -1227,6 +1381,8 @@
         '2026-03-01':{'Outbound Sales':655368,'Outbound SDR':146292,'Email':120048,'Events':74580,'Direct':62736,'Content Syndication':59196,'Organic Search':33684,'Deal Registration':18000,'Paid Search':600},
         '2026-02-22':{'Outbound Sales':34788,'Outbound SDR':144600,'Email':25380,'Events':38916,'Direct':419184,'Content Syndication':438936,'Organic Search':78864,'Deal Registration':38520,'Paid Search':164244}
       },
+      partnerSize: {},
+      partnerChannels: {},
       milestones:{
         weeks:['2026-01-04','2026-01-11','2026-01-18','2026-01-25','2026-02-01','2026-02-08','2026-02-15','2026-02-22','2026-03-01'],
         mqls: {'2026-01-04':207,'2026-01-11':181,'2026-01-18':254,'2026-01-25':234,'2026-02-01':332,'2026-02-08':398,'2026-02-15':563,'2026-02-22':313,'2026-03-01':329},
@@ -1236,6 +1392,8 @@
     };
 
     renderAll(SEED);
+    // Apply initial partner state (OFF)
+    document.body.classList.toggle('partner-hidden', !partnerOn);
     document.getElementById('footerDate').textContent = 'Source: SSOT GTM Pipeline 2026 · Seed data (drop CSV to refresh)';
 
     // ── CSV parsing ───────────────────────────────────────────────
@@ -1268,7 +1426,7 @@
       const rows=lines.slice(1).map(l=>{ const v=parseLine(l); const r={}; headers.forEach((h,i)=>r[h]=(v[i]||'').trim()); return r; });
 
       const wkSet=new Set();
-      const sm={},total={},size={},sizeAll={},region={},regionAll={},channels={};
+      const sm={},total={},size={},sizeAll={},region={},regionAll={},channels={},partnerChannels={},partnerSize={};
 
       rows.forEach(r=>{
         const wk=toWeekISO(r['Week Day']);
@@ -1276,7 +1434,8 @@
         wkSet.add(wk);
 
         const pip=toMoney(r['Generated Pipeline (At SQL)'])*MULTIP;
-        const isPartner=(r['Mql Reason Simple']||'').toLowerCase().includes('partner');
+        const bc=(r['Business Channel']||'').trim().toLowerCase();
+        const isPartner= bc==='partner' || (bc==='' && (r['Mql Reason Simple']||'').toLowerCase().includes('partner'));
 
         total[wk]=(total[wk]||0)+pip;
 
@@ -1308,10 +1467,18 @@
           const ch=((r['Channel Detail']||r['Campaign Team Channel']||'Other').trim())||'Other';
           if(!channels[wk]) channels[wk]={};
           channels[wk][ch]=(channels[wk][ch]||0)+pip;
+        } else {
+          const pch=((r['Channel Detail']||r['Campaign Team Channel']||'Other').trim())||'Other';
+          if(!partnerChannels[wk]) partnerChannels[wk]={};
+          partnerChannels[wk][pch]=(partnerChannels[wk][pch]||0)+pip;
+          if(['LE','SME','SB'].includes(sz)){
+            if(!partnerSize[wk]) partnerSize[wk]={};
+            partnerSize[wk][sz]=(partnerSize[wk][sz]||0)+pip;
+          }
         }
       });
 
-      return { weeks:Array.from(wkSet).sort(), sm, total, size, sizeAll, region, regionAll, channels };
+      return { weeks:Array.from(wkSet).sort(), sm, total, size, sizeAll, region, regionAll, channels, partnerChannels, partnerSize };
     }
 
     // ── Milestones CSV parser ─────────────────────────────────────
@@ -1358,7 +1525,7 @@
       document.body.classList.toggle('partner-hidden', !partnerOn);
       document.getElementById('partnerToggleState').textContent = partnerOn ? 'ON' : 'OFF';
       document.getElementById('partnerToggle').classList.toggle('off', !partnerOn);
-      renderRegion(lastPipelineData);
+      renderAll(lastPipelineData);
     });
 
     dropZone.addEventListener('click', ()=>fileInput.click());
