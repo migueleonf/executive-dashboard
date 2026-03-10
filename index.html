@@ -1513,12 +1513,12 @@
       const iMQLdate = idx('MQL Date'), iMQLval = idx('MQLs');
       const iSALdate = idx('SAL Date'), iSALval = idx('SALs');
       const iSQLdate = idx('SQL Date'), iSQLval = idx('SQLs');
-      // col C — match case-insensitively, spaces or underscores
-      const iBizCh = headers.findIndex(h =>
+      // col C — match case-insensitively, spaces or underscores; fallback to index 2
+      let iBizCh = headers.findIndex(h =>
         h.toLowerCase().replace(/[\s\-]+/g,'_') === 'business_channel'
       );
-
-      if(iBizCh < 0) console.warn('[Milestones] business_channel column not found. Headers:', headers);
+      if(iBizCh < 0) iBizCh = 2; // user confirmed it's column C (0-based index 2)
+      console.log('[Milestones] business_channel col index:', iBizCh, '→', headers[iBizCh]);
       const Q1_START = '2026-01-01', Q1_END = '2026-03-31';
       const wkSet = new Set();
       const mqls={}, sals={}, sqls={};         // S&M only
@@ -1621,9 +1621,10 @@
             const mv = milestoneView(m);
             renderFunnelBars(mv);
             renderFunnelChart(mv);
-            const totMQL = m.weeks.reduce((s,w) => s+(m.mqls[w]||0), 0);
-            const totSQL = m.weeks.reduce((s,w) => s+(m.sqls[w]||0), 0);
-            const msg = `Milestones · ${m.weeks.length} weeks · QTD MQLs: ${totMQL} · SQLs: ${totSQL}`;
+            const totMQL    = m.weeks.reduce((s,w) => s+(m.mqls[w]   ||0), 0);
+            const totMQLAll = m.weeks.reduce((s,w) => s+(m.mqlsAll[w]||0), 0);
+            const partnerMQL = totMQLAll - totMQL;
+            const msg = `Milestones · QTD MQLs: ${totMQL} S&M + ${partnerMQL} Partner`;
             statusEl.textContent = `Updated ${now}`;
             showToast(`✓ ${msg}`);
           } else {
