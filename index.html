@@ -1279,8 +1279,9 @@
 
     function renderFunnel(d) {
       if(!d.milestones) return;
-      renderFunnelBars(d.milestones);
-      renderFunnelChart(d.milestones);
+      const mv = milestoneView(d.milestones);
+      renderFunnelBars(mv);
+      renderFunnelChart(mv);
     }
 
     // ── Render: Partner Section ───────────────────────────────────
@@ -1369,7 +1370,7 @@
     }
 
     function renderAll(d) {
-      renderKPIs(d); renderTable(d); renderTrend(d); renderSizeCharts(d); renderRegion(d); renderFunnel(d); renderInsights(d, d.milestones); renderPartnerSection(d);
+      renderKPIs(d); renderTable(d); renderTrend(d); renderSizeCharts(d); renderRegion(d); renderFunnel(d); renderInsights(d, milestoneView(d.milestones)); renderPartnerSection(d);
     }
 
     // ── Default seed data (last known) ────────────────────────────
@@ -1401,7 +1402,11 @@
         weeks:['2026-01-04','2026-01-11','2026-01-18','2026-01-25','2026-02-01','2026-02-08','2026-02-15','2026-02-22','2026-03-01'],
         mqls: {'2026-01-04':207,'2026-01-11':181,'2026-01-18':254,'2026-01-25':234,'2026-02-01':332,'2026-02-08':398,'2026-02-15':563,'2026-02-22':313,'2026-03-01':329},
         sals: {'2026-01-04':60, '2026-01-11':60, '2026-01-18':53, '2026-01-25':39, '2026-02-01':56, '2026-02-08':71, '2026-02-15':67, '2026-02-22':58, '2026-03-01':63},
-        sqls: {'2026-01-04':34, '2026-01-11':28, '2026-01-18':21, '2026-01-25':20, '2026-02-01':33, '2026-02-08':42, '2026-02-15':150,'2026-02-22':58, '2026-03-01':41}
+        sqls: {'2026-01-04':34, '2026-01-11':28, '2026-01-18':21, '2026-01-25':20, '2026-02-01':33, '2026-02-08':42, '2026-02-15':150,'2026-02-22':58, '2026-03-01':41},
+        // No partner milestone data in seed — All = S&M
+        mqlsAll: {'2026-01-04':207,'2026-01-11':181,'2026-01-18':254,'2026-01-25':234,'2026-02-01':332,'2026-02-08':398,'2026-02-15':563,'2026-02-22':313,'2026-03-01':329},
+        salsAll: {'2026-01-04':60, '2026-01-11':60, '2026-01-18':53, '2026-01-25':39, '2026-02-01':56, '2026-02-08':71, '2026-02-15':67, '2026-02-22':58, '2026-03-01':63},
+        sqlsAll: {'2026-01-04':34, '2026-01-11':28, '2026-01-18':21, '2026-01-25':20, '2026-02-01':33, '2026-02-08':42, '2026-02-15':150,'2026-02-22':58, '2026-03-01':41}
       }
     };
 
@@ -1499,7 +1504,7 @@
     }
 
     // ── Milestones CSV parser ─────────────────────────────────────
-    // Expects Milestone Counts format: date cols + pre-aggregated MQLs/SALs/SQLs count cols
+    // Col C "business_channel": Partner rows excluded when partnerOn=false
     function processMilestonesCSV(text, delim) {
       const lines = text.split('\n').filter(l => l.trim());
       const headers = lines[0].split(delim).map(h => h.trim().replace(/^"|"$/g,''));
@@ -1508,29 +1513,45 @@
       const iMQLdate = idx('MQL Date'), iMQLval = idx('MQLs');
       const iSALdate = idx('SAL Date'), iSALval = idx('SALs');
       const iSQLdate = idx('SQL Date'), iSQLval = idx('SQLs');
+      const iBizCh   = idx('business_channel');  // col C
 
       const Q1_START = '2026-01-01', Q1_END = '2026-03-31';
       const wkSet = new Set();
-      const mqls={}, sals={}, sqls={};
+      const mqls={}, sals={}, sqls={};         // S&M only
+      const mqlsAll={}, salsAll={}, sqlsAll={}; // S&M + Partner
 
       lines.slice(1).forEach(line => {
         const row = line.split(delim).map(c => c.trim().replace(/^"|"$/g,''));
-        const addTo = (dateIdx, valIdx, bucket) => {
+        const isPartner = iBizCh >= 0 && (row[iBizCh]||'').trim().toLowerCase() === 'partner';
+
+        const addTo = (dateIdx, valIdx, smBucket, allBucket) => {
           if(dateIdx < 0 || valIdx < 0) return;
           const raw = (row[dateIdx]||'').split(' ')[0];
           const wk  = toWeekISO(raw);
           const val = parseFloat(row[valIdx]||'0') || 0;
           if(wk && Q1_START <= wk && wk <= Q1_END && val > 0) {
             wkSet.add(wk);
-            bucket[wk] = (bucket[wk]||0) + val;
+            allBucket[wk] = (allBucket[wk]||0) + val;
+            if(!isPartner) smBucket[wk] = (smBucket[wk]||0) + val;
           }
         };
-        addTo(iMQLdate, iMQLval, mqls);
-        addTo(iSALdate, iSALval, sals);
-        addTo(iSQLdate, iSQLval, sqls);
+        addTo(iMQLdate, iMQLval, mqls, mqlsAll);
+        addTo(iSALdate, iSALval, sals, salsAll);
+        addTo(iSQLdate, iSQLval, sqls, sqlsAll);
       });
 
-      return { weeks: Array.from(wkSet).sort(), mqls, sals, sqls };
+      return { weeks: Array.from(wkSet).sort(), mqls, sals, sqls, mqlsAll, salsAll, sqlsAll };
+    }
+
+    // ── Helper: pick partner-aware milestone view ─────────────────
+    function milestoneView(m) {
+      if(!m) return null;
+      return {
+        weeks: m.weeks,
+        mqls: partnerOn ? (m.mqlsAll||m.mqls) : m.mqls,
+        sals: partnerOn ? (m.salsAll||m.sals) : m.sals,
+        sqls: partnerOn ? (m.sqlsAll||m.sqls) : m.sqls,
+      };
     }
 
     // ── Single upload handler — auto-detects tab type ─────────────
@@ -1592,8 +1613,10 @@
           } else if(type === 'milestones') {
             const m = processMilestonesCSV(text, delim);
             lastMilestonesData = m;
-            renderFunnelBars(m);
-            renderFunnelChart(m);
+            lastPipelineData.milestones = m;
+            const mv = milestoneView(m);
+            renderFunnelBars(mv);
+            renderFunnelChart(mv);
             const totMQL = m.weeks.reduce((s,w) => s+(m.mqls[w]||0), 0);
             const totSQL = m.weeks.reduce((s,w) => s+(m.sqls[w]||0), 0);
             const msg = `Milestones · ${m.weeks.length} weeks · QTD MQLs: ${totMQL} · SQLs: ${totSQL}`;
