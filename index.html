@@ -784,7 +784,7 @@
           </div>
 
           <div class="qtd-row">
-            <div class="qtd-label">QTD S&amp;M Total</div>
+            <div class="qtd-label" id="qtdTotalLabel">QTD S&amp;M Total</div>
             <div class="qtd-num" id="qtdTotal">—</div>
             <div class="qtd-note" id="qtdTotalNote">vs — QTD target</div>
           </div>
@@ -962,18 +962,26 @@
       document.getElementById('kAvgdelta').className   = `delta ${avgD.cls}`;
 
 
+      // QTD Summary — partner-aware
+      const qtdVal  = partnerOn ? d.weeks.reduce((s,w)=>s+(d.total[w]||0),0) : qtdSM;
+      const qtdTgt2 = (partnerOn ? TARGETS.total : TARGETS.sm) * d.weeks.length;
+      const gap2    = qtdVal - qtdTgt2;
+      const q1Tgt2  = (partnerOn ? TARGETS.total : TARGETS.sm) * Q_WEEKS;
+      const qtdLbl  = partnerOn ? 'QTD S&M+Partner Total' : 'QTD S&M Total';
+
       document.getElementById('qtdWeeks').innerHTML       = `${d.weeks.length} <span>of ${Q_WEEKS}</span>`;
-      document.getElementById('qtdTotal').textContent     = fmtD(qtdSM);
-      document.getElementById('qtdTotalNote').textContent = `vs ${fmtD(qtdTgt)} QTD target`;
+      document.getElementById('qtdTotalLabel').textContent = qtdLbl;
+      document.getElementById('qtdTotal').textContent     = fmtD(qtdVal);
+      document.getElementById('qtdTotalNote').textContent = `vs ${fmtD(qtdTgt2)} QTD target`;
 
       const gEl=document.getElementById('qtdGap');
-      gEl.textContent = (gap>=0?'+':'–')+fmtD(Math.abs(gap));
-      gEl.className   = `qtd-gap ${gap>=0?'on-track':''}`;
-      document.getElementById('qtdGapNote').textContent = gap>=0?'Ahead of pace':'Behind target pace';
+      gEl.textContent = (gap2>=0?'+':'–')+fmtD(Math.abs(gap2));
+      gEl.className   = `qtd-gap ${gap2>=0?'on-track':''}`;
+      document.getElementById('qtdGapNote').textContent = gap2>=0?'Ahead of pace':'Behind target pace';
 
       document.getElementById('qtdRemaining').innerHTML  = `${wksRem} <span>weeks</span>`;
       document.getElementById('qtdNeedNote').textContent = wksRem>0
-        ? `Need ${fmtD((TARGETS.sm*Q_WEEKS-qtdSM)/wksRem)}/wk avg to close gap`
+        ? `Need ${fmtD((q1Tgt2-qtdVal)/wksRem)}/wk avg to close gap`
         : 'Quarter complete';
     }
 
