@@ -1227,13 +1227,8 @@
     function renderSizeCharts(d) {
       const labels = d.weeks.map(fmtWk);
       const n = labels.length;
-      // Compute combined size (S&M + Partner) from parts — works even when sizeAll is absent (SEED)
-      const computedSizeAll = {};
-      d.weeks.forEach(w => {
-        const s = d.size[w] || {}, p = (d.partnerSize || {})[w] || {};
-        computedSizeAll[w] = { LE:(s.LE||0)+(p.LE||0), SME:(s.SME||0)+(p.SME||0), SB:(s.SB||0)+(p.SB||0) };
-      });
-      const src = partnerOn ? computedSizeAll : d.size;
+      // sizeAll is built unconditionally (all rows, before isPartner check) — safe to use directly
+      const src = partnerOn ? (d.sizeAll || d.size) : d.size;
       const subLabel = partnerOn ? 'S&M + Partner' : 'Sales & Marketing only';
       ['sizeSBsub','sizeSMEsub','sizeLEsub'].forEach(id => {
         const el = document.getElementById(id);
