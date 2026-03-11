@@ -858,8 +858,17 @@
     <div class="col right">
 
       <!-- Executive Insights -->
-      <div class="card">
-        <div class="sec-label" style="margin-bottom:12px">Executive Insights</div>
+      <div class="card" id="insightsCard">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div class="sec-label">Executive Insights</div>
+          <button id="insightsToggle" onclick="(function(){
+            const body = document.getElementById('insightsBody');
+            const btn  = document.getElementById('insightsToggle');
+            const hidden = body.style.display === 'none';
+            body.style.display = hidden ? '' : 'none';
+            btn.textContent = hidden ? 'Hide' : 'Show';
+          })()" style="font-size:10px;font-family:'Inter',sans-serif;font-weight:500;letter-spacing:.08em;text-transform:uppercase;background:var(--lilac);color:var(--violet);border:none;border-radius:2px;padding:3px 10px;cursor:pointer;">Hide</button>
+        </div>
         <div id="insightsBody"></div>
       </div>
 
