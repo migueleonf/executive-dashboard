@@ -695,7 +695,10 @@
   </header>
 
   <!-- ── KPI Row ──────────────────────────────────── -->
-  <div class="sec-label">Pipeline Performance · This Week</div>
+  <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+    <div class="sec-label">Pipeline Performance · This Week</div>
+    <span id="updatedPipeline" style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;"></span>
+  </div>
 
   <div class="kpi-grid">
 
@@ -757,7 +760,7 @@
         <!-- SB -->
         <div class="card">
           <div class="chart-header">
-            <div><div class="sec-label" style="margin-bottom:2px">SB · Actuals vs Target</div><div id="sizeSBsub" style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Sales &amp; Marketing only</div></div>
+            <div><div class="sec-label" style="margin-bottom:2px">SB · Actuals vs Target</div><div id="sizeSBsub" style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Sales &amp; Marketing only</div><div id="sizeQTD_SB" style="font-size:11px;color:var(--text-secondary);margin-top:3px;"></div></div>
             <div class="legend">
               <div class="legend-item"><div class="leg-dot" style="background:#BFBEFF"></div> Actuals</div>
               <div class="legend-item"><div class="leg-dash" style="width:18px;height:2px;border-top:2px dashed #2D2D82"></div> S&amp;M Target</div>
@@ -769,7 +772,7 @@
         <!-- SME -->
         <div class="card">
           <div class="chart-header">
-            <div><div class="sec-label" style="margin-bottom:2px">SME · Actuals vs Target</div><div id="sizeSMEsub" style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Sales &amp; Marketing only</div></div>
+            <div><div class="sec-label" style="margin-bottom:2px">SME · Actuals vs Target</div><div id="sizeSMEsub" style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Sales &amp; Marketing only</div><div id="sizeQTD_SME" style="font-size:11px;color:var(--text-secondary);margin-top:3px;"></div></div>
             <div class="legend">
               <div class="legend-item"><div class="leg-dot" style="background:#6058FF"></div> Actuals</div>
               <div class="legend-item"><div class="leg-dash" style="width:18px;height:2px;border-top:2px dashed #2D2D82"></div> S&amp;M Target</div>
@@ -781,7 +784,7 @@
         <!-- LE -->
         <div class="card">
           <div class="chart-header">
-            <div><div class="sec-label" style="margin-bottom:2px">LE · Actuals vs Target</div><div id="sizeLEsub" style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Sales &amp; Marketing only</div></div>
+            <div><div class="sec-label" style="margin-bottom:2px">LE · Actuals vs Target</div><div id="sizeLEsub" style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Sales &amp; Marketing only</div><div id="sizeQTD_LE" style="font-size:11px;color:var(--text-secondary);margin-top:3px;"></div></div>
             <div class="legend">
               <div class="legend-item"><div class="leg-dot" style="background:#160245"></div> Actuals</div>
               <div class="legend-item"><div class="leg-dash" style="width:18px;height:2px;border-top:2px dashed #2D2D82"></div> S&amp;M Target</div>
@@ -806,6 +809,10 @@
       </div>
 
       <!-- ── Funnel Section ──────────────────────────────── -->
+      <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px;margin-top:16px;">
+        <div class="sec-label">Funnel · MQL → SAL</div>
+        <span id="updatedFunnel" style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;"></span>
+      </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch;">
 
@@ -941,7 +948,10 @@
   <!-- ── Self-Service ARR Section ────────────────── -->
   <div style="margin-top:22px;">
     <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-      <div class="sec-label">Self-Service ARR · Q1 2026</div>
+      <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+        <div class="sec-label">Self-Service ARR · Q1 2026</div>
+        <span id="updatedSelfServe" style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;"></span>
+      </div>
       <div style="font-size:10px;color:var(--text-secondary);font-style:italic;">
         ⚠ Actuals = Gross New MRR × 12 (Upgrade excluded). Targets are ARR as provided. Business should validate ARR methodology for SB Self-Service.
       </div>
@@ -1247,6 +1257,17 @@
       sizeInstSB  = makeSize('sizeChartSB',  'SB',  'rgba(191,190,255,0.85)', TARGETS.sizeSB,  sizeInstSB);
       sizeInstSME = makeSize('sizeChartSME', 'SME', 'rgba(96,88,255,0.82)',   TARGETS.sizeSME, sizeInstSME);
       sizeInstLE  = makeSize('sizeChartLE',  'LE',  'rgba(22,2,69,0.85)',     TARGETS.sizeLE,  sizeInstLE);
+
+      // QTD totals per segment
+      const tgtMap = { SB: TARGETS.sizeSB, SME: TARGETS.sizeSME, LE: TARGETS.sizeLE };
+      ['SB','SME','LE'].forEach(key => {
+        const qtd    = d.weeks.reduce((s,w) => s + ((src[w]||{})[key]||0), 0);
+        const qtdTgt = tgtMap[key] * d.weeks.length;
+        const pct    = qtdTgt > 0 ? Math.round(qtd / qtdTgt * 100) : 0;
+        const color  = pct >= 100 ? 'var(--green)' : 'var(--red)';
+        const el = document.getElementById('sizeQTD_'+key);
+        if(el) el.innerHTML = `QTD Actual Pipeline: <strong style="color:var(--indigo)">${fmtD(qtd)}</strong> <span style="color:var(--text-secondary)">/ tgt ${fmtD(qtdTgt)}</span> <span style="font-weight:600;color:${color}">${pct}%</span>`;
+      });
     }
 
     function renderRegion(d) {
@@ -1725,6 +1746,9 @@
       const headers=parseCSVLine(lines[0],delim).map(h=>h.trim());
       const rows=lines.slice(1).map(l=>{ const v=parseCSVLine(l,delim); const r={}; headers.forEach((h,i)=>r[h]=(v[i]||'').trim()); return r; });
 
+      // Resolve business channel column flexibly (handles any casing/spacing)
+      const bizChKey = headers.find(h => h.toLowerCase().replace(/[\s_]+/g,'') === 'businesschannel') || 'Business Channel';
+
       const wkSet=new Set();
       const sm={},total={},size={},sizeAll={},region={},regionAll={},channels={},partnerChannels={},partnerSize={};
 
@@ -1734,8 +1758,8 @@
         wkSet.add(wk);
 
         const pip=toMoney(r['Generated Pipeline (At SQL)'])*MULTIP;
-        const bc=(r['Business Channel']||'').trim().toLowerCase();
-        const isPartner= bc==='partner' || (bc==='' && (r['Mql Reason Simple']||'').toLowerCase().includes('partner'));
+        const bc=(r[bizChKey]||'').trim().toLowerCase();
+        const isPartner= bc==='partner';
 
         total[wk]=(total[wk]||0)+pip;
 
@@ -2085,6 +2109,10 @@
             document.getElementById('footerDate').textContent  =
               `Source: ${file.name} · Loaded ${loadedDate}`;
             statusEl.textContent = `Updated ${now}`;
+            ['updatedPipeline','updatedFunnel','updatedSelfServe'].forEach(id => {
+              const el = document.getElementById(id);
+              if(el) el.textContent = `Updated ${loadedDate}`;
+            });
             showToast(`✓ Excel loaded · ${loaded.join(' · ')}`);
             return;
           }
@@ -2106,6 +2134,8 @@
             const qtdSM  = data.weeks.reduce((s,w) => s+(data.sm[w]||0), 0);
             const latest = data.weeks[data.weeks.length-1];
             statusEl.textContent = `Updated ${now}`;
+            const upPipe = document.getElementById('updatedPipeline');
+            if(upPipe) upPipe.textContent = `Updated ${loadedDate}`;
             showToast(`✓ Pipeline · ${data.weeks.length} weeks · QTD S&M: ${fmtD(qtdSM)}`);
           } else if(type === 'milestones') {
             const m = processMilestonesCSV(text, delim);
@@ -2117,6 +2147,8 @@
             const totMQL    = m.weeks.reduce((s,w) => s+(m.mqls[w]   ||0), 0);
             const totMQLAll = m.weeks.reduce((s,w) => s+(m.mqlsAll[w]||0), 0);
             statusEl.textContent = `Updated ${now}`;
+            const upFunnel = document.getElementById('updatedFunnel');
+            if(upFunnel) upFunnel.textContent = `Updated ${loadedDate}`;
             showToast(`✓ Milestones · QTD MQLs: ${totMQL} S&M + ${totMQLAll-totMQL} Partner`);
           } else if(type === 'selfserve') {
             const ss = processSelfServeCSV(text, delim);
@@ -2124,6 +2156,8 @@
             renderSelfServe(ss);
             const totARR = ss.months.reduce((s,m) => s+(ss.amer[m]||0)+(ss.emea[m]||0)+(ss.apac[m]||0), 0);
             statusEl.textContent = `Updated ${now}`;
+            const upSS = document.getElementById('updatedSelfServe');
+            if(upSS) upSS.textContent = `Updated ${loadedDate}`;
             showToast(`✓ Self-Service · QTD ARR: ${fmtD(totARR)}`);
           } else {
             showToast('⚠ Could not detect file type — drop Pipeline, Milestones, or Self-Service CSV');
