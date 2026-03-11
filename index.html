@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     /* ── Color Palette ────────────────────────────── */
     :root {
@@ -466,6 +467,95 @@
       color: #2d8f6f;
     }
 
+    /* ── Upload modal ──────────────────────────────────────────────── */
+    #uploadModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(22,2,69,0.5);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+    }
+    #uploadModal.open { display: flex; }
+
+    .modal-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 48px 40px 40px;
+      width: 520px;
+      max-width: 92vw;
+      position: relative;
+      box-shadow: 0 32px 80px rgba(22,2,69,0.22);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 22px;
+      line-height: 1;
+      color: var(--text-secondary);
+      transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--iris); }
+
+    .modal-drop {
+      border: 2px dashed var(--border);
+      border-radius: 6px;
+      padding: 56px 32px;
+      text-align: center;
+      cursor: default;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .modal-drop.drag-over {
+      border-color: var(--iris);
+      border-style: solid;
+      background: var(--lilac);
+    }
+
+    .modal-drop-icon {
+      font-size: 36px;
+      opacity: 0.25;
+      margin-bottom: 18px;
+      display: block;
+    }
+    .modal-drop-title {
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .modal-drop-hint {
+      font-size: 11px;
+      color: var(--text-secondary);
+      opacity: 0.7;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+    .modal-browse-btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--iris);
+      background: none;
+      border: 1px solid var(--iris);
+      border-radius: 3px;
+      padding: 8px 22px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .modal-browse-btn:hover {
+      background: var(--iris);
+      color: #fff;
+    }
+
     .upload-icon { font-size: 12px; }
 
     /* ── Toast ─────────────────────────────────────── */
@@ -595,10 +685,10 @@
       <div style="margin-top:4px;display:flex;align-items:center;gap:8px;justify-content:flex-end;">
         <div class="upload-zone" id="dropZone">
           <span class="upload-icon">↑</span>
-          <span id="uploadLabel">Drop CSV to update</span>
+          <span id="uploadLabel">Drop file to update</span>
         </div>
         <button id="partnerToggle" class="partner-toggle off" title="Show/hide partner data">Partner <span id="partnerToggleState">OFF</span></button>
-        <input type="file" id="fileInput" accept=".csv" multiple style="display:none">
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" multiple style="display:none">
       </div>
       <div id="uploadStatus" style="font-size:11px;color:var(--text-secondary);margin-top:4px;text-align:right;min-height:14px;letter-spacing:0.04em;"></div>
     </div>
@@ -823,6 +913,57 @@
   </div>
 
 
+  <!-- ── Self-Service ARR Section ────────────────── -->
+  <div style="margin-top:22px;">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div class="sec-label">Self-Service ARR · Q1 2026</div>
+      <div style="font-size:10px;color:var(--text-secondary);font-style:italic;">
+        ⚠ Actuals = Gross New MRR × 12 (Upgrade excluded). Targets are ARR as provided. Business should validate ARR methodology for SB Self-Service.
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+
+      <!-- AMER -->
+      <div class="card">
+        <div style="margin-bottom:10px;">
+          <div class="sec-label" style="margin-bottom:2px">AMER · Self-Service</div>
+          <div style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Gross New ARR · <span style="display:inline-flex;align-items:center;gap:3px;"><span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:rgba(96,88,255,0.85)"></span> Actual</span> &nbsp;<span style="display:inline-flex;align-items:center;gap:3px;"><span style="display:inline-block;width:8px;height:8px;border-radius:1px;border:2px solid rgba(96,88,255,0.85)"></span> Target</span></div>
+        </div>
+        <div id="ssKpiAMER" style="margin-bottom:12px;"></div>
+        <canvas id="ssChartAMER" height="140"></canvas>
+      </div>
+
+      <!-- EMEA -->
+      <div class="card">
+        <div style="margin-bottom:10px;">
+          <div class="sec-label" style="margin-bottom:2px">EMEA · Self-Service</div>
+          <div style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Gross New ARR · <span style="display:inline-flex;align-items:center;gap:3px;"><span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:rgba(22,2,69,0.75)"></span> Actual</span> &nbsp;<span style="display:inline-flex;align-items:center;gap:3px;"><span style="display:inline-block;width:8px;height:8px;border-radius:1px;border:2px solid rgba(22,2,69,0.75)"></span> Target</span></div>
+        </div>
+        <div id="ssKpiEMEA" style="margin-bottom:12px;"></div>
+        <canvas id="ssChartEMEA" height="140"></canvas>
+      </div>
+
+      <!-- APAC -->
+      <div class="card">
+        <div style="margin-bottom:10px;">
+          <div class="sec-label" style="margin-bottom:2px">APAC · Self-Service</div>
+          <div style="font-size:10px;color:var(--text-secondary);letter-spacing:0.05em;">Gross New ARR · <span style="display:inline-flex;align-items:center;gap:3px;"><span style="display:inline-block;width:8px;height:8px;border-radius:1px;background:rgba(191,190,255,0.9)"></span> Actual</span> &nbsp;<span style="display:inline-flex;align-items:center;gap:3px;"><span style="display:inline-block;width:8px;height:8px;border-radius:1px;border:2px solid rgba(191,190,255,0.9)"></span> Target</span></div>
+        </div>
+        <div id="ssKpiAPAC" style="margin-bottom:12px;"></div>
+        <canvas id="ssChartAPAC" height="140"></canvas>
+      </div>
+
+    </div>
+
+    <!-- YTD Summary card -->
+    <div class="card" style="margin-top:14px;">
+      <div class="sec-label" style="margin-bottom:14px">YTD Attainment · All Regions Combined</div>
+      <div id="ssYTD"></div>
+    </div>
+
+  </div>
+
   <!-- ── Footer ───────────────────────────────────── -->
   <footer class="footer">
     <span>Demand Generation · Executive Dashboard · Phase 1</span>
@@ -830,6 +971,22 @@
   </footer>
 
   <div id="toast"></div>
+
+  <!-- Upload modal — must be in DOM before the script block below -->
+  <div id="uploadModal">
+    <div class="modal-card">
+      <button class="modal-close" id="uploadModalClose">×</button>
+      <div class="modal-drop" id="modalDropZone">
+        <span class="modal-drop-icon">↑</span>
+        <div class="modal-drop-title">Drag &amp; drop your file here</div>
+        <div class="modal-drop-hint">
+          Excel (.xlsx) with Pipeline, Milestones &amp; SS tabs<br>
+          or individual CSV files
+        </div>
+        <button class="modal-browse-btn" id="modalBrowseBtn">Browse files</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     // ── Constants ─────────────────────────────────────────────────
@@ -1249,8 +1406,177 @@
     function renderFunnel(d) {
       if(!d.milestones) return;
       const mv = milestoneView(d.milestones);
+      if(!mv) return;
       renderFunnelBars(mv);
       renderFunnelChart(mv);
+    }
+
+    // ── Self-Service targets (ARR) — Jan–Dec 2026 per region ─────
+    const SS_TARGETS = (() => {
+      const raw = {
+        AMER:[108785,131511,199690,152975,184539,279232,157183,189589,286807,169809,204740,309533],
+        EMEA:[23552, 28262, 42393, 29673, 35608, 53412, 25507, 30608, 45912, 40308, 48369, 72554],
+        APAC:[7739,  9287,  13931, 10719, 12862, 19293, 16900, 20280, 30420, 23852, 28622, 42933],
+      };
+      const out = { AMER:{}, EMEA:{}, APAC:{} };
+      ['AMER','EMEA','APAC'].forEach(r => raw[r].forEach((v,i) => {
+        out[r][`2026-${String(i+1).padStart(2,'0')}`] = v;
+      }));
+      return out;
+    })();
+
+    // ── Render: Self-Service ARR — waterfall actual vs target ─────
+    const ssInsts = { AMER:null, EMEA:null, APAC:null };
+
+    function renderSelfServe(ss) {
+      if(!ss) return;
+      const months = ss.months;
+      const labels = months.map(m => {
+        const [yr, mo] = m.split('-');
+        return new Date(+yr, +mo-1, 1).toLocaleDateString('en-US', {month:'short'});
+      });
+
+      const regions = [
+        { key:'AMER', dataKey:'amer', color:'rgba(96,88,255,0.85)',  kpiEl:'ssKpiAMER', canvasId:'ssChartAMER' },
+        { key:'EMEA', dataKey:'emea', color:'rgba(22,2,69,0.75)',    kpiEl:'ssKpiEMEA', canvasId:'ssChartEMEA' },
+        { key:'APAC', dataKey:'apac', color:'rgba(191,190,255,0.9)', kpiEl:'ssKpiAPAC', canvasId:'ssChartAPAC' },
+      ];
+
+      // ── YTD Summary ──────────────────────────────────────────────
+      const regionDefs = [
+        { key:'AMER', dataKey:'amer', color:'rgba(96,88,255,0.85)',  label:'AMER' },
+        { key:'EMEA', dataKey:'emea', color:'rgba(22,2,69,0.75)',    label:'EMEA' },
+        { key:'APAC', dataKey:'apac', color:'rgba(191,190,255,0.9)', label:'APAC' },
+      ];
+      const ytdActual = regionDefs.reduce((s,r) => s + months.reduce((a,m) => a+(ss[r.dataKey][m]||0),0), 0);
+      const ytdTarget = regionDefs.reduce((s,r) => s + months.reduce((a,m) => a+(SS_TARGETS[r.key][m]||0),0), 0);
+      const ytdDelta  = ytdActual - ytdTarget;
+      const ytdPct    = ytdTarget > 0 ? (ytdActual / ytdTarget * 100).toFixed(0) : 0;
+      const ytdUp     = ytdDelta >= 0;
+      const barW      = Math.min(100, +ytdPct);
+
+      document.getElementById('ssYTD').innerHTML = `
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start;">
+          <!-- Overall numbers -->
+          <div style="display:flex;gap:32px;flex-wrap:wrap;">
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <span style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em">YTD Actual</span>
+              <span style="font-size:32px;font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--indigo);line-height:1">${fmtD(ytdActual)}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <span style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em">YTD Target</span>
+              <span style="font-size:32px;font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--text-secondary);line-height:1">${fmtD(ytdTarget)}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <span style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.06em">Gap</span>
+              <span style="font-size:32px;font-family:'Cormorant Garamond',serif;font-weight:400;color:${ytdUp?'var(--green)':'var(--red)'};line-height:1">${ytdUp?'+':'-'}${fmtD(Math.abs(ytdDelta))}</span>
+              <span style="font-size:12px;font-weight:600;color:${ytdUp?'var(--green)':'var(--red)'};">${ytdPct}% attainment</span>
+            </div>
+          </div>
+          <!-- Region breakdown + progress bars -->
+          <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px;">
+            ${regionDefs.map(r => {
+              const rAct = months.reduce((a,m) => a+(ss[r.dataKey][m]||0), 0);
+              const rTgt = months.reduce((a,m) => a+(SS_TARGETS[r.key][m]||0), 0);
+              const rPct = rTgt > 0 ? Math.min(150, (rAct/rTgt*100)).toFixed(0) : 0;
+              const rUp  = rAct >= rTgt;
+              return `<div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;width:36px;">${r.label}</span>
+                <div style="flex:1;height:6px;background:rgba(0,0,0,0.06);border-radius:3px;overflow:hidden;">
+                  <div style="width:${Math.min(100,+rPct)}%;height:100%;background:${r.color};border-radius:3px;"></div>
+                </div>
+                <span style="font-size:11px;font-weight:600;color:${rUp?'var(--green)':'var(--red)'};width:40px;text-align:right;">${rPct}%</span>
+                <span style="font-size:11px;color:var(--text-secondary);white-space:nowrap;">${fmtD(rAct)} / ${fmtD(rTgt)}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+
+      regions.forEach(({ key, dataKey, color, kpiEl, canvasId }) => {
+        const actuals = months.map(m => ss[dataKey][m] || 0);
+        const targets = months.map(m => SS_TARGETS[key][m] || 0);
+
+        // Per-month KPI table: actual / target / delta for all months
+        document.getElementById(kpiEl).innerHTML = `
+          <div style="display:grid;grid-template-columns:repeat(${months.length},1fr);gap:6px;">
+            ${months.map((m, i) => {
+              const act = actuals[i], tgt = targets[i];
+              const delta = act - tgt;
+              const pct = tgt > 0 ? (act / tgt * 100).toFixed(0) : 0;
+              const up = delta >= 0;
+              return `<div style="display:flex;flex-direction:column;gap:1px;">
+                <span style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em">${labels[i]}</span>
+                <span style="font-size:18px;font-family:'Cormorant Garamond',serif;font-weight:400;color:var(--indigo);line-height:1.1">${fmtD(act)}</span>
+                <span style="font-size:10px;color:var(--text-secondary);">tgt ${fmtD(tgt)}</span>
+                <span style="font-size:11px;font-weight:600;color:${up?'var(--green)':'var(--red)'};">${up?'▲':'▼'} ${Math.abs(delta)<1000?'$'+Math.round(Math.abs(delta)):fmtD(Math.abs(delta))} · ${pct}%</span>
+              </div>`;
+            }).join('')}
+          </div>`;
+
+        // Waterfall chart: actual bar + floating delta bar (red=gap, green=surplus)
+        const deltaData  = months.map((m, i) => {
+          const act = actuals[i], tgt = targets[i];
+          if(act === tgt) return null;
+          return [Math.min(act, tgt), Math.max(act, tgt)];
+        });
+        const deltaColors  = months.map((m, i) => actuals[i] >= targets[i] ? 'rgba(34,160,80,0.2)'  : 'rgba(210,50,50,0.12)');
+        const deltaBorders = months.map((m, i) => actuals[i] >= targets[i] ? 'rgba(34,160,80,0.8)'  : 'rgba(210,50,50,0.6)');
+
+        // Inline plugin: draw delta labels above each float bar
+        const deltaLabelPlugin = {
+          id: `deltaLabels_${key}`,
+          afterDraw(chart) {
+            const ctx = chart.ctx;
+            const meta = chart.getDatasetMeta(1); // delta dataset
+            actuals.forEach((act, i) => {
+              const tgt = targets[i];
+              const delta = act - tgt;
+              if(delta === 0) return;
+              const bar = meta.data[i];
+              if(!bar) return;
+              const topY = Math.min(bar.y, bar.base) - 5;
+              const pct  = tgt > 0 ? Math.abs((delta/tgt)*100).toFixed(0) : 0;
+              const lbl  = `${delta>0?'+':'−'}${fmtD(Math.abs(delta))} (${pct}%)`;
+              ctx.save();
+              ctx.font = '600 9.5px Inter, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.fillStyle = delta > 0 ? '#1a8c4e' : '#c0392b';
+              ctx.fillText(lbl, bar.x, topY);
+              ctx.restore();
+            });
+          }
+        };
+
+        if(ssInsts[key]) ssInsts[key].destroy();
+        ssInsts[key] = new Chart(document.getElementById(canvasId), {
+          type: 'bar',
+          data: { labels, datasets: [
+            { label:'Actual', data: actuals,
+              backgroundColor: color, borderWidth:0, borderRadius:2, barPercentage:0.5 },
+            { label:'Delta',  data: deltaData,
+              backgroundColor: deltaColors, borderColor: deltaBorders,
+              borderWidth: 1.5, barPercentage:0.5 },
+          ]},
+          options: {
+            responsive: true,
+            layout: { padding: { top: 26 } },
+            plugins: { legend:{display:false},
+              tooltip: {
+                backgroundColor:'#160245', titleColor:'#BFBEFF', bodyColor:'#fff',
+                padding:10, cornerRadius:3,
+                callbacks: { label: (c) => {
+                  if(c.datasetIndex === 0) return ` Actual: ${fmtD(c.parsed.y)}`;
+                  const act = actuals[c.dataIndex], tgt = targets[c.dataIndex];
+                  const d = act - tgt;
+                  return [` Target: ${fmtD(tgt)}`, ` Delta: ${d>=0?'+':''}${fmtD(d)} (${(act/tgt*100).toFixed(0)}%)`];
+                }}
+              }
+            },
+            scales:{ x: xAxis(), y: { ...yAxis(), grace: '15%' } }
+          },
+          plugins: [deltaLabelPlugin]
+        });
+      });
     }
 
     function renderAll(d) {
@@ -1297,24 +1623,50 @@
     // SEED has no regionAll (no partner region data) — point to region so toggle doesn't break
     SEED.regionAll = SEED.region;
 
+    // Self-Service seed data (Gross New MRR × 12 = ARR)
+    const SEED_SS = {
+      months: ['2026-01','2026-02','2026-03'],
+      amer: {'2026-01':3141*12, '2026-02':9053*12, '2026-03':2841*12},
+      emea: {'2026-01':4150*12, '2026-02':653*12,  '2026-03':569*12},
+      apac: {'2026-01':4100*12, '2026-02':468*12,  '2026-03':117*12},
+    };
+
     renderAll(SEED);
+    renderSelfServe(SEED_SS);
     // Apply initial partner state (OFF)
     document.body.classList.toggle('partner-hidden', !partnerOn);
-    document.getElementById('footerDate').textContent = 'Source: SSOT GTM Pipeline 2026 · Seed data (drop CSV to refresh)';
+    document.getElementById('footerDate').textContent = 'Source: SSOT GTM Pipeline 2026 · Seed data (drop Excel or CSV to refresh)';
 
     // ── CSV parsing ───────────────────────────────────────────────
-    function parseLine(line) {
+    function parseCSVLine(line, delim=',') {
       const out=[]; let f='', q=false;
       for(let i=0;i<line.length;i++){
         const c=line[i];
         if(c==='"'){q=!q;}
-        else if(c===','&&!q){out.push(f);f='';}
+        else if(c===delim&&!q){out.push(f);f='';}
         else{f+=c;}
       }
       out.push(f); return out;
     }
 
     function toMoney(s){ return parseFloat((s||'').replace(/[$,\s]/g,''))||0; }
+
+    function toMonthISO(s) {
+      if(!s||!s.trim()) return null;
+      const t = s.trim().split(' ')[0];
+      if(t.includes('/')) {
+        // M/D/YYYY or M/D/YY — assume US M/D
+        const p = t.split('/');
+        if(p.length !== 3) return null;
+        const yr = p[2].length === 2 ? '20'+p[2] : p[2];
+        return `${yr}-${String(+p[0]).padStart(2,'0')}`;
+      }
+      if(t.includes('-') && t.length >= 7) {
+        // YYYY-MM-DD  or  YYYY-MM
+        return t.substring(0, 7);
+      }
+      return null;
+    }
 
     function toWeekISO(s) {
       if(!s||!s.trim()) return null;
@@ -1340,8 +1692,9 @@
 
     function processCSV(text) {
       const lines=text.split('\n').filter(l=>l.trim());
-      const headers=parseLine(lines[0]).map(h=>h.trim());
-      const rows=lines.slice(1).map(l=>{ const v=parseLine(l); const r={}; headers.forEach((h,i)=>r[h]=(v[i]||'').trim()); return r; });
+      const delim=detectDelim(text);
+      const headers=parseCSVLine(lines[0],delim).map(h=>h.trim());
+      const rows=lines.slice(1).map(l=>{ const v=parseCSVLine(l,delim); const r={}; headers.forEach((h,i)=>r[h]=(v[i]||'').trim()); return r; });
 
       const wkSet=new Set();
       const sm={},total={},size={},sizeAll={},region={},regionAll={},channels={},partnerChannels={},partnerSize={};
@@ -1399,6 +1752,34 @@
       return { weeks:Array.from(wkSet).sort(), sm, total, size, sizeAll, region, regionAll, channels, partnerChannels, partnerSize };
     }
 
+    // ── Self-Service CSV parser ───────────────────────────────────
+    // Columns: Month Year, Region, ..., Gross New MRR, Gross Upgrade MRR
+    // MRR × 12 → ARR (assumption noted in chart)
+    function processSelfServeCSV(text, delim) {
+      const lines = text.split('\n').filter(l => l.trim());
+      const headers = parseCSVLine(lines[0], delim).map(h => h.trim());
+      const idx = name => headers.findIndex(h => h === name);
+      const iMonth  = idx('Month Year');
+      const iRegion = idx('Region');
+      const iNew    = idx('Gross New MRR');
+      const iUpg    = idx('Gross Upgrade MRR');
+      const mthSet  = new Set();
+      const amer={}, emea={}, apac={};
+      lines.slice(1).forEach(line => {
+        const row = parseCSVLine(line, delim).map(c => c.trim());
+        const mth = toMonthISO(row[iMonth]);
+        if(!mth) return;
+        const region = (row[iRegion]||'').trim().toUpperCase();
+        const val = toMoney(row[iNew]) * 12; // Gross New MRR only × 12 → ARR
+        if(val <= 0) return;
+        mthSet.add(mth);
+        if(region==='AMER')      amer[mth] = (amer[mth]||0) + val;
+        else if(region==='EMEA') emea[mth] = (emea[mth]||0) + val;
+        else if(region==='APAC') apac[mth] = (apac[mth]||0) + val;
+      });
+      return { months: Array.from(mthSet).sort(), amer, emea, apac };
+    }
+
     // ── Milestones CSV parser ─────────────────────────────────────
     // Row-per-record format:
     //   Col C (index 2): business_channel — "Partner" rows excluded when partnerOn=false
@@ -1406,7 +1787,7 @@
     //   Col J (index 9): milestone count
     function processMilestonesCSV(text, delim) {
       const lines = text.split('\n').filter(l => l.trim());
-      const headers = lines[0].split(delim).map(h => h.trim().replace(/^"|"$/g,''));
+      const headers = parseCSVLine(lines[0], delim).map(h => h.trim());
 
       // Col C: business_channel (match by name or fall back to index 2)
       let iBizCh = headers.findIndex(h =>
@@ -1436,7 +1817,7 @@
       const mqlsAll={}, salsAll={}, sqlsAll={};  // S&M + Partner
 
       lines.slice(1).forEach(line => {
-        const row = line.split(delim).map(c => c.trim().replace(/^"|"$/g,''));
+        const row = parseCSVLine(line, delim).map(c => c.trim());
         const isPartner = (row[iBizCh]||'').trim().toLowerCase() === 'partner';
         const stageRaw  = (row[iStage]||'').trim().toUpperCase();
         const count     = parseFloat(row[iCount]||'0') || 0;
@@ -1482,15 +1863,45 @@
       renderAll(lastPipelineData);
     });
 
-    dropZone.addEventListener('click', ()=>fileInput.click());
+    // ── Upload modal ──────────────────────────────────────────────
+    const uploadModal   = document.getElementById('uploadModal');
+    const modalDropZone = document.getElementById('modalDropZone');
+    const modalBrowseBtn = document.getElementById('modalBrowseBtn');
+
+    function openModal()  { uploadModal.classList.add('open'); }
+    function closeModal() { uploadModal.classList.remove('open'); }
+
+    // Header zone click → open modal
+    dropZone.addEventListener('click', openModal);
+
+    // Header zone still accepts direct drops (convenience)
     dropZone.addEventListener('dragover', e=>{ e.preventDefault(); dropZone.classList.add('drag-over'); });
     dropZone.addEventListener('dragleave', ()=>dropZone.classList.remove('drag-over'));
     dropZone.addEventListener('drop', e=>{
       e.preventDefault(); dropZone.classList.remove('drag-over');
       Array.from(e.dataTransfer.files).forEach(f => handleFile(f));
     });
+
+    // Modal close: × button or backdrop click
+    document.getElementById('uploadModalClose').addEventListener('click', closeModal);
+    uploadModal.addEventListener('click', e=>{ if(e.target === uploadModal) closeModal(); });
+
+    // Modal drop zone
+    modalDropZone.addEventListener('dragover', e=>{ e.preventDefault(); modalDropZone.classList.add('drag-over'); });
+    modalDropZone.addEventListener('dragleave', ()=>modalDropZone.classList.remove('drag-over'));
+    modalDropZone.addEventListener('drop', e=>{
+      e.preventDefault();
+      modalDropZone.classList.remove('drag-over');
+      closeModal();
+      Array.from(e.dataTransfer.files).forEach(f => handleFile(f));
+    });
+
+    // Browse button inside modal
+    modalBrowseBtn.addEventListener('click', e=>{ e.stopPropagation(); fileInput.click(); });
     fileInput.addEventListener('change', e=>{
+      closeModal();
       Array.from(e.target.files).forEach(f => handleFile(f));
+      fileInput.value = '';
     });
 
     function detectDelim(text) {
@@ -1501,24 +1912,162 @@
     function detectTabType(text, delim) {
       const first = text.split('\n')[0];
       if(first.includes('Generated Pipeline')) return 'pipeline';
+      if(first.includes('Gross New MRR') || first.includes('Gross Upgrade MRR')) return 'selfserve';
       if(first.includes('MQL Date') || first.includes('Lead Create Date')) return 'milestones';
-      // Row-per-record milestones format: has business_channel (snake_case) column
       if(first.includes('business_channel')) return 'milestones';
       return 'unknown';
     }
 
     let lastPipelineData   = SEED;
     let lastMilestonesData = SEED.milestones;
+    let lastSelfServeData  = SEED_SS;
 
     function handleFile(file) {
       const reader = new FileReader();
+      const isExcel = /\.(xlsx|xls)$/i.test(file.name);
+
       reader.onload = ev => {
         try {
-          const text  = ev.target.result;
-          const delim = detectDelim(text);
-          const type  = detectTabType(text, delim);
+          const buf = ev.target.result;
           const statusEl = document.getElementById('uploadStatus');
           const now = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+          const loadedDate = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+          // ── Excel path ────────────────────────────────────────────
+          if (isExcel) {
+            const wb = XLSX.read(new Uint8Array(buf), {type: 'array'});
+            const loaded = [];
+
+            // Case-insensitive row-object field lookup
+            // Pipeline sheet: convert to CSV text and use existing processCSV
+            function sheetToCSV(ws) {
+              const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:'', dateNF:'m/d/yyyy'});
+              return rows.map(r => r.map(v => {
+                const s = String(v==null?'':v);
+                return s.includes(',') ? `"${s.replace(/"/g,'""')}"` : s;
+              }).join(',')).join('\n');
+            }
+
+            // UTC-safe: Excel date serial → ISO week start (Sunday), no timezone drift
+            const DAY_MS = 86400000;
+            function serialToWeekISO(serial) {
+              const ms = Math.round(serial - 25569) * DAY_MS;
+              const dow = new Date(ms).getUTCDay(); // 0=Sun…6=Sat
+              return new Date(ms - dow * DAY_MS).toISOString().split('T')[0];
+            }
+            function serialToMonthISO(serial) {
+              return new Date(Math.round(serial - 25569) * DAY_MS).toISOString().substring(0, 7);
+            }
+
+            // Milestones sheet: index-based raw access — fast on 100K+ rows
+            function parseMilestonesSheet(ws) {
+              const aoa = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
+              if(aoa.length < 2) return {weeks:[], mqls:{}, sals:{}, sqls:{}, mqlsAll:{}, salsAll:{}, sqlsAll:{}};
+              const hdr = aoa[0].map(h => (h||'').toString().toLowerCase().trim());
+              const iDate  = hdr.indexOf('date');
+              const iMile  = hdr.indexOf('milestone');
+              const iCount = hdr.indexOf('count');
+              const iBizCh = hdr.indexOf('business_channel');
+              if([iDate,iMile,iCount,iBizCh].some(i=>i<0))
+                return {weeks:[], mqls:{}, sals:{}, sqls:{}, mqlsAll:{}, salsAll:{}, sqlsAll:{}};
+              const Q1_S='2026-01-04', Q1_E='2026-03-31';
+              const wkSet=new Set(); const mqls={},sals={},sqls={},mqlsAll={},salsAll={},sqlsAll={};
+              for(let i=1;i<aoa.length;i++) {
+                const row=aoa[i];
+                const count=+(row[iCount])||0;
+                if(count<=0) continue;
+                const stage=(row[iMile]||'').toString().toUpperCase();
+                let sm,all;
+                if(stage==='MQL')      {sm=mqls; all=mqlsAll;}
+                else if(stage==='SAL') {sm=sals; all=salsAll;}
+                else if(stage==='SQL') {sm=sqls; all=sqlsAll;}
+                else continue;
+                const dv=row[iDate]; if(!dv) continue;
+                const wk = typeof dv==='number' ? serialToWeekISO(dv) : toWeekISO(dv.toString());
+                if(!wk||wk<Q1_S||wk>Q1_E) continue;
+                wkSet.add(wk);
+                const isPartner=(row[iBizCh]||'').toString().toLowerCase()==='partner';
+                all[wk]=(all[wk]||0)+count;
+                if(!isPartner) sm[wk]=(sm[wk]||0)+count;
+              }
+              return {weeks:Array.from(wkSet).sort(), mqls, sals, sqls, mqlsAll, salsAll, sqlsAll};
+            }
+
+            // SS sheet: index-based raw access — handles numeric MRR and date serials
+            function parseSSSheet(ws) {
+              const aoa = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
+              if(aoa.length < 2) return {months:[], amer:{}, emea:{}, apac:{}};
+              const hdr = aoa[0].map(h => (h||'').toString().toLowerCase().trim());
+              const iMth = hdr.indexOf('month year');
+              const iReg = hdr.indexOf('region');
+              const iMRR = hdr.indexOf('gross new mrr');
+              if([iMth,iReg,iMRR].some(i=>i<0)) return {months:[], amer:{}, emea:{}, apac:{}};
+              const mthSet=new Set(); const amer={},emea={},apac={};
+              for(let i=1;i<aoa.length;i++) {
+                const row=aoa[i];
+                const region=(row[iReg]||'').toString().trim().toUpperCase();
+                if(!['AMER','EMEA','APAC'].includes(region)) continue;
+                const mrrVal=row[iMRR];
+                const val=(typeof mrrVal==='number' ? mrrVal : toMoney(String(mrrVal||'')))*12;
+                if(val<=0) continue;
+                const dv=row[iMth];
+                const mth = typeof dv==='number' ? serialToMonthISO(dv) : toMonthISO((dv||'').toString());
+                if(!mth) continue;
+                mthSet.add(mth);
+                if(region==='AMER')      amer[mth]=(amer[mth]||0)+val;
+                else if(region==='EMEA') emea[mth]=(emea[mth]||0)+val;
+                else if(region==='APAC') apac[mth]=(apac[mth]||0)+val;
+              }
+              return {months:Array.from(mthSet).sort(), amer, emea, apac};
+            }
+
+            wb.SheetNames.forEach(name => {
+              const ws  = wb.Sheets[name];
+              const key = name.toLowerCase().replace(/[\s\-_]+/g,'');
+
+              if(key.includes('pipeline')) {
+                const data = processCSV(sheetToCSV(ws));
+                data.milestones = lastMilestonesData;
+                lastPipelineData = data;
+                renderAll(data);
+                loaded.push('Pipeline');
+              } else if(key === 'milestones') {
+                const m = parseMilestonesSheet(ws);
+                lastMilestonesData = m;
+                lastPipelineData.milestones = m;
+                const mv = milestoneView(m);
+                if(mv) { renderFunnelBars(mv); renderFunnelChart(mv); }
+                loaded.push('Milestones');
+              } else if(key === 'ss' || key.includes('selfserv') || key.includes('selfservice')) {
+                const ss = parseSSSheet(ws);
+                lastSelfServeData = ss;
+                renderSelfServe(ss);
+                loaded.push('Self-Service');
+              }
+            });
+
+            if(loaded.length === 0) {
+              showToast('⚠ No recognized sheets — expected "GTM Pipeline 2026", "Milestones", "SS"');
+              return;
+            }
+
+            dropZone.classList.add('loaded');
+            document.getElementById('uploadLabel').textContent = `✓ ${file.name}`;
+            document.getElementById('footerDate').textContent  =
+              `Source: ${file.name} · Loaded ${loadedDate}`;
+            statusEl.textContent = `Updated ${now}`;
+            showToast(`✓ Excel loaded · ${loaded.join(' · ')}`);
+            return;
+          }
+
+          // ── CSV path (unchanged) ──────────────────────────────────
+          const bytes = new Uint8Array(buf);
+          let text;
+          if(bytes[0]===0xFF && bytes[1]===0xFE)      text = new TextDecoder('utf-16le').decode(buf);
+          else if(bytes[0]===0xFE && bytes[1]===0xFF) text = new TextDecoder('utf-16be').decode(buf);
+          else                                          text = new TextDecoder('utf-8').decode(buf);
+          const delim = detectDelim(text);
+          const type  = detectTabType(text, delim);
 
           if(type === 'pipeline') {
             const data = processCSV(text);
@@ -1527,9 +2076,8 @@
             renderAll(data);
             const qtdSM  = data.weeks.reduce((s,w) => s+(data.sm[w]||0), 0);
             const latest = data.weeks[data.weeks.length-1];
-            const msg = `Pipeline · ${data.weeks.length} weeks · Latest: ${fmtWk(latest)} · QTD S&M: ${fmtD(qtdSM)}`;
             statusEl.textContent = `Updated ${now}`;
-            showToast(`✓ ${msg}`);
+            showToast(`✓ Pipeline · ${data.weeks.length} weeks · QTD S&M: ${fmtD(qtdSM)}`);
           } else if(type === 'milestones') {
             const m = processMilestonesCSV(text, delim);
             lastMilestonesData = m;
@@ -1539,26 +2087,32 @@
             renderFunnelChart(mv);
             const totMQL    = m.weeks.reduce((s,w) => s+(m.mqls[w]   ||0), 0);
             const totMQLAll = m.weeks.reduce((s,w) => s+(m.mqlsAll[w]||0), 0);
-            const partnerMQL = totMQLAll - totMQL;
-            const msg = `Milestones · QTD MQLs: ${totMQL} S&M + ${partnerMQL} Partner`;
             statusEl.textContent = `Updated ${now}`;
-            showToast(`✓ ${msg}`);
+            showToast(`✓ Milestones · QTD MQLs: ${totMQL} S&M + ${totMQLAll-totMQL} Partner`);
+          } else if(type === 'selfserve') {
+            const ss = processSelfServeCSV(text, delim);
+            lastSelfServeData = ss;
+            renderSelfServe(ss);
+            const totARR = ss.months.reduce((s,m) => s+(ss.amer[m]||0)+(ss.emea[m]||0)+(ss.apac[m]||0), 0);
+            statusEl.textContent = `Updated ${now}`;
+            showToast(`✓ Self-Service · QTD ARR: ${fmtD(totARR)}`);
           } else {
-            showToast('⚠ Could not detect tab type — drop Pipeline or Milestones CSV');
+            showToast('⚠ Could not detect file type — drop Pipeline, Milestones, or Self-Service CSV');
             return;
           }
 
           dropZone.classList.add('loaded');
           document.getElementById('uploadLabel').textContent = `✓ ${file.name}`;
           document.getElementById('footerDate').textContent  =
-            `Source: ${file.name} · ${type === 'pipeline' ? `×${MULTIP} ACV · ` : ''}Loaded ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}`;
+            `Source: ${file.name} · ${type === 'pipeline' ? `×${MULTIP} ACV · ` : ''}Loaded ${loadedDate}`;
         } catch(err){
           showToast(`⚠ Error: ${err.message}`);
           console.error(err);
         }
       };
-      reader.readAsText(file);
+      reader.readAsArrayBuffer(file);
     }
   </script>
+
 </body>
 </html>
