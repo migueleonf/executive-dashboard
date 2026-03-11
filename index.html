@@ -907,6 +907,22 @@
             <span style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;color:var(--indigo);">$27.50M</span>
           </div>
         </div>
+
+        <!-- QTD Progress Bar -->
+        <div style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(96,88,255,0.12);">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;">
+            <span style="font-size:10px;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;">QTD Progress</span>
+            <span id="q1ProgressPct" style="font-size:11px;font-weight:600;color:var(--indigo);">0%</span>
+          </div>
+          <div style="background:rgba(96,88,255,0.12);border-radius:4px;height:7px;overflow:hidden;">
+            <div id="q1ProgressFill" style="height:100%;width:0%;border-radius:4px;background:var(--iris);transition:width 0.7s ease;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:7px;">
+            <span id="q1ProgressVal" style="font-size:11px;color:var(--text-secondary);">—</span>
+            <span id="q1ProgressTgt" style="font-size:11px;color:var(--text-secondary);">—</span>
+          </div>
+        </div>
+
       </div>
 
     </div>
@@ -1109,6 +1125,16 @@
       document.getElementById('qtdNeedNote').textContent = wksRem>0
         ? `Need ${fmtD((q1Tgt2-qtdVal)/wksRem)}/wk avg to close gap`
         : 'Quarter complete';
+
+      // Q1 Progress Bar
+      const pct = Math.min(100, qtdVal / q1Tgt2 * 100);
+      const fillColor = qtdVal >= qtdTgt2 ? 'var(--iris)' : (pct >= 60 ? '#f59e0b' : '#ef4444');
+      document.getElementById('q1ProgressFill').style.width      = pct.toFixed(1) + '%';
+      document.getElementById('q1ProgressFill').style.background = fillColor;
+      document.getElementById('q1ProgressPct').textContent       = pct.toFixed(1) + '%';
+      document.getElementById('q1ProgressPct').style.color       = fillColor;
+      document.getElementById('q1ProgressVal').textContent       = fmtD(qtdVal);
+      document.getElementById('q1ProgressTgt').textContent       = `of ${fmtD(q1Tgt2)}`;
     }
 
     // ── Render: Campaign table ────────────────────────────────────
